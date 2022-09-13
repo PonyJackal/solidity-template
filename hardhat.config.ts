@@ -10,6 +10,7 @@ import { resolve } from "path";
 import "solidity-coverage";
 
 import "./tasks/deploy";
+import "./tasks/scripts";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
