@@ -27,6 +27,10 @@ contract GreeterUpgradeable is Initializable, OwnableUpgradeable {
         greeting = _greeting;
     }
 
+    function newFunction() external pure returns (string memory) {
+        return "newFunction";
+    }
+
     function throwError() external pure {
         revert GreeterError();
     }
