@@ -9,6 +9,8 @@ import { NetworkUserConfig } from "hardhat/types";
 import { resolve } from "path";
 import "solidity-coverage";
 
+import "./tasks/deploy";
+
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 // Ensure that we have all the environment variables we need.
