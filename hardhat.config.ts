@@ -1,19 +1,20 @@
-import "@nomicfoundation/hardhat-toolbox";
+import "@nomiclabs/hardhat-etherscan";
+import "@nomiclabs/hardhat-waffle";
+import "@openzeppelin/hardhat-upgrades";
+import "@typechain/hardhat";
 import { config as dotenvConfig } from "dotenv";
-import type { HardhatUserConfig } from "hardhat/config";
-import type { NetworkUserConfig } from "hardhat/types";
+import "hardhat-gas-reporter";
+import { HardhatUserConfig } from "hardhat/config";
+import { NetworkUserConfig } from "hardhat/types";
 import { resolve } from "path";
+import "solidity-coverage";
 
-import "./tasks/accounts";
-import "./tasks/deploy";
-
-const dotenvConfigPath: string = process.env.DOTENV_CONFIG_PATH || "./.env";
-dotenvConfig({ path: resolve(__dirname, dotenvConfigPath) });
+dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 // Ensure that we have all the environment variables we need.
-const mnemonic: string | undefined = process.env.MNEMONIC;
-if (!mnemonic) {
-  throw new Error("Please set your MNEMONIC in a .env file");
+const privateKey = process.env.PRIVATE_KEY;
+if (!privateKey) {
+  throw new Error("Please set your PRIVATE_KEY in a .env file");
 }
 
 const infuraApiKey: string | undefined = process.env.INFURA_API_KEY;
@@ -31,9 +32,14 @@ const chainIds = {
   "polygon-mainnet": 137,
   "polygon-mumbai": 80001,
   rinkeby: 4,
+  goerli: 5,
 };
 
 function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
+  if (!privateKey) {
+    throw new Error("Please set your PRIVATE_KEY in a .env file");
+  }
+
   let jsonRpcUrl: string;
   switch (chain) {
     case "avalanche":
@@ -46,18 +52,16 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
       jsonRpcUrl = "https://" + chain + ".infura.io/v3/" + infuraApiKey;
   }
   return {
-    accounts: {
-      count: 10,
-      mnemonic,
-      path: "m/44'/60'/0'/0",
-    },
+    accounts: [privateKey],
     chainId: chainIds[chain],
     url: jsonRpcUrl,
   };
 }
 
+const network = process.env.TESTING === "true" ? "hardhat" : process.env.DEPLOY_NETWORK || "goerli";
+
 const config: HardhatUserConfig = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: network,
   etherscan: {
     apiKey: {
       arbitrumOne: process.env.ARBISCAN_API_KEY || "",
@@ -68,6 +72,7 @@ const config: HardhatUserConfig = {
       polygon: process.env.POLYGONSCAN_API_KEY || "",
       polygonMumbai: process.env.POLYGONSCAN_API_KEY || "",
       rinkeby: process.env.ETHERSCAN_API_KEY || "",
+      goerli: process.env.ETHERSCAN_API_KEY || "",
     },
   },
   gasReporter: {
@@ -78,10 +83,17 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: {
-        mnemonic,
-      },
+      accounts: [
+        {
+          privateKey,
+          balance: "100",
+        },
+      ],
       chainId: chainIds.hardhat,
+      forking: {
+        url: "https://mainnet.infura.io/v3/" + infuraApiKey,
+        blockNumber: 15491029,
+      },
     },
     arbitrum: getChainConfig("arbitrum-mainnet"),
     avalanche: getChainConfig("avalanche"),
@@ -91,6 +103,7 @@ const config: HardhatUserConfig = {
     "polygon-mainnet": getChainConfig("polygon-mainnet"),
     "polygon-mumbai": getChainConfig("polygon-mumbai"),
     rinkeby: getChainConfig("rinkeby"),
+    goerli: getChainConfig("goerli"),
   },
   paths: {
     artifacts: "./artifacts",
@@ -99,11 +112,11 @@ const config: HardhatUserConfig = {
     tests: "./test",
   },
   solidity: {
-    version: "0.8.15",
+    version: "0.8.12",
     settings: {
       metadata: {
         // Not including the metadata hash
-        // https://github.com/paulrberg/hardhat-template/issues/31
+        // https://github.com/paulrberg/solidity-template/issues/31
         bytecodeHash: "none",
       },
       // Disable the optimizer when debugging
