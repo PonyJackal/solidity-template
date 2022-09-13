@@ -4,7 +4,7 @@ import * as path from "path";
 
 dotenvConfig({ path: path.resolve(__dirname, "../../../.env") });
 
-type FileName = "greeter";
+type FileName = "greeter" | "greeterProxy";
 
 export const network = () => {
   const { DEPLOY_NETWORK } = process.env;

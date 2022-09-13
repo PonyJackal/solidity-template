@@ -7,7 +7,7 @@ import "hardhat/console.sol";
 
 error GreeterError();
 
-contract Greeter is Initializable, OwnableUpgradeable {
+contract GreeterUpgradeable is Initializable, OwnableUpgradeable {
     string public greeting;
 
     function initialize(string memory _greeting) external initializer {
